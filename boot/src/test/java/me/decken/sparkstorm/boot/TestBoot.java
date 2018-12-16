@@ -9,5 +9,4 @@ public class TestBoot extends AbstractBoot {
         super(appName);
         enableHive();
     }
-
 }

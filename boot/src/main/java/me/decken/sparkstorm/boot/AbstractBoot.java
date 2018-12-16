@@ -8,6 +8,8 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.serializer.KryoRegistrator;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.SQLConf;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.decken.sparkstorm.common.CollectionUtil.mapToJavaMap;
-import static me.decken.sparkstorm.common.FormatUtil.mapToKv;
+import static me.decken.sparkstorm.common.FormatUtil.mapToKvString;
 
 /**
  * @author decken
@@ -43,20 +45,48 @@ public abstract class AbstractBoot implements Boot {
         enableHive = true;
     }
 
+
+    /**
+     * @return sparkSession对象
+     */
     @Override public SparkSession spark() {
         return this.session;
     }
 
+    /**
+     * 保留这个是为了兼容1.x之前的接口, 不建议使用了,建议直接使用 [[SparkContext]] 或者 [[JavaSparkContext]]
+     *
+     * @return SQLContext对象
+     */
+    @Deprecated
     @Override public SQLContext sqlContext() {
         return this.session.sqlContext();
     }
 
+    /**
+     * @return scala版本的SparkContext
+     */
     @Override public SparkContext sc() {
         return session.sparkContext();
     }
 
+    /**
+     * 兼容java的SparkContext
+     * @return
+     */
     @Override public JavaSparkContext jsc() {
         return new JavaSparkContext(sc());
+    }
+
+    /**
+     * 执行sql返回Dataset<Row>
+     *
+     * @param sqlString
+     * @return
+     */
+    @Override
+    public Dataset<Row> sql(String sqlString) {
+        return this.session.sql(sqlString);
     }
 
     @Override
@@ -64,13 +94,12 @@ public abstract class AbstractBoot implements Boot {
         log.info("开始启动应用:{}", appName);
         buildSparkSession();
         this.session = builder.getOrCreate();
-
         log.info("appName:{} get session finished", appName);
     }
 
 
     public void buildSparkSession() {
-        String master = "local[4]";
+        String master = "local[2]";
         this.builder = SparkSession.builder();
         if (StringUtils.isNotBlank(appName)) {
             builder.appName(appName);
@@ -80,14 +109,13 @@ public abstract class AbstractBoot implements Boot {
 
 //        setHdfsConfig();
         setKryoRegistrator();
-        setHiveSupport();
+        enableHiveSupport();
         setSqlConfig();
 
         if (this.config != null) {
             // 以用户传递的配置进行覆盖
             builder.config(config);
         }
-
     }
 
 
@@ -96,7 +124,7 @@ public abstract class AbstractBoot implements Boot {
      */
     public void showConfig() {
         Map<String, String> configMap = getAllConfig();
-        log.info("all config:\n{}", mapToKv(configMap));
+        log.info("all config:\n{}", mapToKvString(configMap));
     }
 
     public Map<String, String> getAllConfig() {
@@ -104,7 +132,7 @@ public abstract class AbstractBoot implements Boot {
     }
 
     public Map<String, String> getSqlConfig() {
-        return mapToJavaMap(sqlContext().conf().getAllConfs());
+        return mapToJavaMap(spark().conf().getAll());
     }
 
     protected void setHdfsConfig() {
@@ -122,7 +150,7 @@ public abstract class AbstractBoot implements Boot {
         }
     }
 
-    protected void setHiveSupport() {
+    protected void enableHiveSupport() {
         if (enableHive) {
             builder.enableHiveSupport()
                     //动态分区特性

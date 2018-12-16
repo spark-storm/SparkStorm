@@ -18,7 +18,7 @@ public class FormatUtil {
         return MessageFormatter.arrayFormat(messagePattern, args).getMessage();
     }
 
-    public static String mapToKv(Map map) {
+    public static String mapToKvString(Map map) {
         checkNotNull(map, "map is null");
         List<String> lines = new ArrayList<>(map.size());
         for (Object k : map.keySet()) {

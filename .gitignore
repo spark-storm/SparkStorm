@@ -88,5 +88,4 @@ hs_err_pid*
 
 *.log
 */target
-*.txt
 *.data

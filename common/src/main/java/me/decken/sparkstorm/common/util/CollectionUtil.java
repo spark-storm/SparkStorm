@@ -1,4 +1,4 @@
-package me.decken.sparkstorm.common;
+package me.decken.sparkstorm.common.util;
 
 import scala.collection.JavaConverters;
 import scala.collection.Map;

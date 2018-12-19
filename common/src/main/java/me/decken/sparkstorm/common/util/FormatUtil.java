@@ -1,4 +1,4 @@
-package me.decken.sparkstorm.common;
+package me.decken.sparkstorm.common.util;
 
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.helpers.MessageFormatter;

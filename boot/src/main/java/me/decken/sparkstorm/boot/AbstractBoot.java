@@ -17,8 +17,8 @@ import org.apache.spark.sql.internal.SQLConf;
 import java.util.List;
 import java.util.Map;
 
-import static me.decken.sparkstorm.common.CollectionUtil.mapToJavaMap;
-import static me.decken.sparkstorm.common.FormatUtil.mapToKvString;
+import static me.decken.sparkstorm.common.util.CollectionUtil.mapToJavaMap;
+import static me.decken.sparkstorm.common.util.FormatUtil.mapToKvString;
 
 /**
  * @author decken

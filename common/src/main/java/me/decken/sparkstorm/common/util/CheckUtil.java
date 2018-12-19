@@ -1,4 +1,4 @@
-package me.decken.sparkstorm.common;
+package me.decken.sparkstorm.common.util;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Sets;
@@ -20,20 +20,19 @@ public class CheckUtil {
         for (Object o : objList) {
             set.add(o);
         }
-
         if (set.size() != objList.size()) {
             throw new IllegalArgumentException("element is not unique, list:" + JSON.toJSONString(objList));
         }
     }
 
-    public static void checkSize(Collection a, Collection b) {
+    public static void checkSameSize(Collection a, Collection b) {
         if (a.size() != b.size()) {
             throw new IllegalArgumentException(String.format("two collection size diff, a:%d:%s, b:%d:%s", a.size(), JSON.toJSONString(a), b.size(), JSON.toJSONString(b)));
         }
 
     }
 
-    public static void checkIsSameSet(Collection a, Collection b) {
+    public static void checkSameElement(Collection a, Collection b) {
         Collection i = CollectionUtils.intersection(a, b);
         HashSet s1 = new HashSet<>(a);
         HashSet s2 = new HashSet<>(b);
@@ -42,13 +41,6 @@ public class CheckUtil {
         }
     }
 
-    public static void checkIsBlank(Collection a) {
-        for (Object o : a) {
-            if (StringUtils.isBlank(o.toString())) {
-                throw new IllegalArgumentException("collection has blank element");
-            }
-        }
-    }
 
     public static void checkNotEmpty(Collection c, Object... args) {
         checkNotEmpty(c, "collection is null or empty", args);

@@ -1,8 +1,9 @@
 package me.decken.sparkstorm.common;
 
+import me.decken.sparkstorm.common.util.JarUtil;
 import org.junit.Test;
 
-import static me.decken.sparkstorm.common.FormatUtil.format;
+import static me.decken.sparkstorm.common.util.FormatUtil.format;
 import static org.junit.Assert.assertNotNull;
 
 /**

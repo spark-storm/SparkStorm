@@ -1,4 +1,4 @@
-package me.decken.sparkstorm.common;
+package me.decken.sparkstorm.common.util;
 
 import org.apache.hadoop.util.VersionUtil;
 import org.spark_project.jetty.util.StringUtil;
@@ -9,7 +9,7 @@ import java.net.URL;
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static me.decken.sparkstorm.common.FormatUtil.format;
+import static me.decken.sparkstorm.common.util.FormatUtil.format;
 
 /**
  * @author decken

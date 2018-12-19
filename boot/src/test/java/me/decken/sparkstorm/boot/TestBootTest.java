@@ -5,7 +5,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.Test;
 
-import static me.decken.sparkstorm.common.JarUtil.getJarFileAbsPath;
+import static me.decken.sparkstorm.common.util.JarUtil.getJarFileAbsPath;
 
 /**
  * @author decken
@@ -24,7 +24,6 @@ public class TestBootTest {
                 // 具体有哪些可选项, 可以看org.apache.spark.sql.DataFrameReader#csv上的注释, 或者直接看实现csv作为数据源的模块中org.apache.spark.sql.execution.datasources.csv.CSVOptions
                 .option("header", true)
                 .option("inferSchema", "true")
-
                 .csv(path);
 
         df.printSchema();

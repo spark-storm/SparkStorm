@@ -82,5 +82,9 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.</groupId>
+            <artifactId></artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -1,5 +1,6 @@
 package me.decken.sparkstorm.boot;
 
+import me.decken.sparkstorm.boot.common.TestBoot;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -10,12 +11,12 @@ import static me.decken.sparkstorm.common.util.JarUtil.getJarFileAbsPath;
 /**
  * @author decken
  */
-public class TestBootTest {
+public class SimpleBootTest {
 
     @Test
     public void testCreate() {
-        TestBoot boot = new TestBoot("test-boot");
-        boot.create();
+
+        TestBoot boot = new TestBoot();
         boot.showConfig();
         String path = getJarFileAbsPath("data/users.txt");
 

@@ -1,7 +1,8 @@
-package me.decken.sparkstorm.boot;
+package me.decken.sparkstorm.boot.component;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.*;
@@ -32,41 +33,79 @@ import static me.decken.sparkstorm.common.util.FormatUtil.format;
  */
 @Slf4j
 public class HiveTable implements Serializable {
+    public static final String DEFAULT_PARTITION_NAME = "visit_date";
     private static final long serialVersionUID = 635439231994501928L;
-    private static final String DEFAULT_PARTITION_NAME = "visit_date";
 
-    /**
-     * 默认是orc格式的hive表
-     */
-
-    private static DataSourceRegister dataSourceRegister = new OrcFileFormat();
-    private String tableName;
-    private List<String> partitionNames;
-    private Boolean partitionTable = false;
-    private Boolean singlePartitionTable = false;
+    @Getter private Boolean partitionTable;
+    @Getter private Boolean singlePartitionTable;
+    @Getter private DataSourceRegister dataSourceRegister;
+    @Getter private String tableName;
+    @Getter private List<String> partitionNames;
     private SparkSession sparkSession;
 
 
+    /**
+     * 实例化普通表
+     *
+     * @param sparkSession
+     * @param tableName
+     */
     public HiveTable(SparkSession sparkSession, String tableName) {
-        this(sparkSession, tableName, Lists.newArrayList());
+        HiveTable.builder().sparkSession(sparkSession).tableName(tableName);
     }
 
+    /**
+     * 实例化单分区表
+     *
+     * @param sparkSession
+     * @param tableName
+     * @param partitionName
+     */
     public HiveTable(SparkSession sparkSession, String tableName, String partitionName) {
-        this(sparkSession, tableName, Lists.newArrayList(partitionName));
-
+        HiveTable.builder().sparkSession(sparkSession).tableName(tableName).partitionName(partitionName);
     }
 
+    /**
+     * 实例化多分区表
+     *
+     * @param sparkSession
+     * @param tableName
+     * @param partitionNames
+     */
     public HiveTable(SparkSession sparkSession, String tableName, List<String> partitionNames) {
+        HiveTable.builder().sparkSession(sparkSession).tableName(tableName).partitionNames(partitionNames);
+    }
+
+    /**
+     * for builder
+     *
+     * @param sparkSession
+     * @param tableName
+     * @param partitionNames
+     * @param dataSourceRegister
+     */
+    private HiveTable(SparkSession sparkSession, String tableName, List<String> partitionNames, DataSourceRegister dataSourceRegister) {
         this.tableName = tableName;
         this.partitionNames = partitionNames;
         this.sparkSession = sparkSession;
-        this.partitionTable = true;
-
-        if (partitionNames.size() == 1) {
-            this.singlePartitionTable = true;
+        this.dataSourceRegister = dataSourceRegister;
+        if (partitionNames == null || partitionNames.isEmpty()) {
+            this.partitionTable = false;
+            this.singlePartitionTable = false;
+        } else {
+            this.partitionTable = true;
+            this.singlePartitionTable = partitionNames.size() == 1;
         }
 
+        //默认是orc格式的hive表
+        if (dataSourceRegister == null) {
+            this.dataSourceRegister = new OrcFileFormat();
+        }
         checkArgument();
+    }
+
+    public static HiveTableBuilder builder() {
+        return new HiveTableBuilder();
     }
 
     private void checkArgument() {
@@ -74,13 +113,12 @@ public class HiveTable implements Serializable {
         checkNotNull(sparkSession, "sparkSession不能为null");
         if (partitionTable) {
             checkNotEmpty(partitionNames, "分区表的分区字段不能为空");
-        }
 
-        if (singlePartitionTable) {
-            Preconditions.checkArgument(partitionNames.size() == 1);
+            if (singlePartitionTable) {
+                Preconditions.checkArgument(partitionNames.size() == 1);
+            }
         }
     }
-
 
     /**
      * 实现根据实际的数据修改表结构,在表的后面append新列
@@ -112,7 +150,6 @@ public class HiveTable implements Serializable {
         }
     }
 
-
     /**
      * 按照现有表的顺序重排, 如果data中有新列, 则追加到后面
      *
@@ -139,7 +176,6 @@ public class HiveTable implements Serializable {
         data = data.select(toColumns(tableCols));
         return data;
     }
-
 
     /**
      * @param data
@@ -172,7 +208,6 @@ public class HiveTable implements Serializable {
     public void save(final Dataset<Row> data, Boolean isAppendSchema) {
         save(data, null, isAppendSchema, false);
     }
-
 
     /**
      * 保存分区表
@@ -215,7 +250,6 @@ public class HiveTable implements Serializable {
         log.info("保存分区表:{} 已经写完", this.tableName);
     }
 
-
     /**
      * 保存一张普通表
      *
@@ -234,7 +268,6 @@ public class HiveTable implements Serializable {
         log.info("表:{} 已经写完", this.tableName);
     }
 
-
     /**
      * 读单分区表的数据
      *
@@ -244,7 +277,6 @@ public class HiveTable implements Serializable {
     public Dataset<Row> read(String partition) {
         return read(Lists.newArrayList(partition));
     }
-
 
     /**
      * 读单分区表的多个分区
@@ -282,7 +314,6 @@ public class HiveTable implements Serializable {
         }
     }
 
-
     public void drop() {
         SessionCatalog catalog = getCatalog();
         TableIdentifier idt = getTableIdentifier();
@@ -290,7 +321,6 @@ public class HiveTable implements Serializable {
         catalog.dropTable(idt, false, true);
         log.info("删除表:{} 完成", this.tableName);
     }
-
 
     protected Column[] getTableCol() {
         return toColumns(getTableColName());
@@ -321,7 +351,6 @@ public class HiveTable implements Serializable {
             return false;
         }
     }
-
 
     private void checkIsPartitionTable() {
         if (!partitionTable) {
@@ -354,7 +383,6 @@ public class HiveTable implements Serializable {
         log.info("删除表:{} 分区名:{} 分区:{}", this.tableName, partitionName, partition);
     }
 
-
     private Boolean isPartitionExist(String partition) {
         try {
             assertPartitionExist(partition);
@@ -373,7 +401,6 @@ public class HiveTable implements Serializable {
         SessionCatalog catalog = getCatalog();
         catalog.listPartitionsByFilter(getTableIdentifier(), javaListToSeq(Lists.newArrayList()));
     }
-
 
     private TableIdentifier getTableIdentifier() {
         try {
@@ -470,7 +497,6 @@ public class HiveTable implements Serializable {
         collection.sort(Comparator.naturalOrder());
     }
 
-
     private SessionCatalog getCatalog() {
         SessionCatalog catalog = sparkSession.sessionState().catalog();
         return catalog;
@@ -478,5 +504,56 @@ public class HiveTable implements Serializable {
 
     private String getPartitionName() {
         return partitionNames.get(0);
+    }
+
+    public static class HiveTableBuilder {
+
+        private DataSourceRegister dataSourceRegister;
+
+        private String tableName;
+
+        private List<String> partitionNames;
+
+        private SparkSession sparkSession;
+
+        private HiveTableBuilder() {
+        }
+
+
+        public HiveTableBuilder dataSourceRegister(DataSourceRegister dataSourceRegister) {
+            this.dataSourceRegister = dataSourceRegister;
+            return this;
+        }
+
+        public HiveTableBuilder tableName(String tableName) {
+            this.tableName = tableName;
+            return this;
+        }
+
+        public HiveTableBuilder partitionNames(List<String> partitionNames) {
+            if (this.partitionNames == null) {
+                this.partitionNames = partitionNames;
+            } else {
+                this.partitionNames.addAll(partitionNames);
+            }
+            return this;
+        }
+
+        public HiveTableBuilder partitionName(String partitionName) {
+            if (this.partitionNames == null) {
+                partitionNames = Lists.newArrayList();
+            }
+            partitionNames.add(partitionName);
+            return this;
+        }
+
+        public HiveTableBuilder sparkSession(SparkSession sparkSession) {
+            this.sparkSession = sparkSession;
+            return this;
+        }
+
+        public HiveTable build() {
+            return new HiveTable(sparkSession, tableName, partitionNames, dataSourceRegister);
+        }
     }
 }

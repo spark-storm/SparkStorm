@@ -3,7 +3,7 @@ package me.decken.sparkstorm.boot;
 /**
  * @author decken
  */
-public class SimpleBootWithHive extends Boot {
+public class SimpleBootWithHive extends BaseBoot {
     private String appName;
 
     public SimpleBootWithHive(String appName) {

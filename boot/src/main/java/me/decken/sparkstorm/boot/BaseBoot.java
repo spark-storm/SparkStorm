@@ -28,12 +28,12 @@ import static me.decken.sparkstorm.common.util.FormatUtil.mapToKvString;
  * @author decken
  */
 @Slf4j
-public abstract class Boot {
+public abstract class BaseBoot {
 
     @Getter
     private SparkSession session;
 
-    public Boot() {
+    public BaseBoot() {
         SparkSessionBuilder builder = new SparkSessionBuilder(SparkSession.builder());
         option(builder);
         this.session = builder.sessionBuilder.getOrCreate();
@@ -90,6 +90,32 @@ public abstract class Boot {
         return this.session.sql(sqlString);
     }
 
+
+    public void debug() {
+        log.info("WebUI url:{}", webUIUrl());
+        keep();
+    }
+
+    /**
+     * 保持Spark不关闭, 调试的时候非常有用
+     */
+    public void keep() {
+        // 1小时
+        keep(60 * 60);
+    }
+
+    public void keep(Integer second) {
+        try {
+            Thread.sleep(second * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String webUIUrl() {
+        return sc().uiWebUrl().get();
+    }
+
     /**
      * 打印所有的配置
      */
@@ -102,6 +128,10 @@ public abstract class Boot {
         return mapToJavaMap(spark().conf().getAll());
     }
 
+    public String getConfig(String key) {
+        return getAllConfig().get(key);
+    }
+
     public Map<String, String> getSqlConfig() {
         return mapToJavaMap(spark().conf().getAll());
     }
@@ -111,6 +141,8 @@ public abstract class Boot {
      * 构建SparkSession.Builder的辅助类
      */
     public static class SparkSessionBuilder {
+
+        public static final String DEFAUL_FS = "fs.defaultFS";
 
         protected SparkSession.Builder sessionBuilder;
 
@@ -185,12 +217,17 @@ public abstract class Boot {
         }
 
         public SparkSessionBuilder defaultFS(String defaultFS) {
-            this.sessionBuilder.config("fs.defaultFS", defaultFS);
+            this.sessionBuilder.config(DEFAUL_FS, defaultFS);
             return this;
         }
 
-        public SparkSessionBuilder localFS(String path) {
-            this.sessionBuilder.config("fs.defaultFS", format("file://{}", path));
+        /**
+         * 本地文件系统作为hdfs读写的路径, 主要用于测试
+         *
+         * @return
+         */
+        public SparkSessionBuilder localFS() {
+            this.sessionBuilder.config(DEFAUL_FS, "file:///");
             return this;
         }
 

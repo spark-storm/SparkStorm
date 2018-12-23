@@ -3,7 +3,7 @@ package me.decken.sparkstorm.boot;
 /**
  * @author decken
  */
-public class SimpleBoot extends Boot {
+public class SimpleBoot extends BaseBoot {
     private String appName;
 
     public SimpleBoot(String appName) {

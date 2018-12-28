@@ -2,10 +2,13 @@ package me.decken.sparkstorm.boot.component;
 
 import me.decken.sparkstorm.boot.BaseBoot;
 import me.decken.sparkstorm.boot.common.TestBootWithHive;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static me.decken.sparkstorm.common.util.JarUtil.getJarFileAbsPath;
 
 /**
  * @author decken
@@ -32,5 +35,27 @@ public class HiveTableTest {
         assertFalse(table.getSinglePartitionTable());
         assertFalse(table.getPartitionTable());
     }
+
+
+    @Test
+    public void saveData() {
+        Dataset<Row> df = getData();
+        HiveTable table = new HiveTable(boot.spark(), "test_data_common");
+        table.save(df);
+    }
+
+
+    protected Dataset<Row> getData() {
+        String path = getJarFileAbsPath("data/users.txt");
+
+        Dataset<Row> df = boot.sqlContext()
+                .read()
+                // 具体有哪些可选项, 可以看org.apache.spark.sql.DataFrameReader#csv上的注释, 或者直接看实现csv作为数据源的模块中org.apache.spark.sql.execution.datasources.csv.CSVOptions
+                .option("header", true)
+                .option("inferSchema", "true")
+                .csv(path);
+        return df;
+    }
+
 
 }

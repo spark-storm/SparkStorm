@@ -51,8 +51,21 @@ public class HiveTable implements Serializable {
      * @param tableName
      */
     public HiveTable(SparkSession sparkSession, String tableName) {
-        HiveTable.builder().sparkSession(sparkSession).tableName(tableName);
+        this(HiveTable.builder()
+                .sparkSession(sparkSession)
+                .tableName(tableName)
+                .build());
     }
+
+    private HiveTable(HiveTable table) {
+        this.partitionTable = table.partitionTable;
+        this.singlePartitionTable = table.singlePartitionTable;
+        this.dataSourceRegister = table.dataSourceRegister;
+        this.tableName = table.tableName;
+        this.partitionNames = table.partitionNames;
+        this.sparkSession = table.sparkSession;
+    }
+
 
     /**
      * 实例化单分区表
@@ -62,7 +75,11 @@ public class HiveTable implements Serializable {
      * @param partitionName
      */
     public HiveTable(SparkSession sparkSession, String tableName, String partitionName) {
-        HiveTable.builder().sparkSession(sparkSession).tableName(tableName).partitionName(partitionName);
+        this(HiveTable.builder()
+                .sparkSession(sparkSession)
+                .tableName(tableName)
+                .partitionName(partitionName)
+                .build());
     }
 
     /**
@@ -73,7 +90,11 @@ public class HiveTable implements Serializable {
      * @param partitionNames
      */
     public HiveTable(SparkSession sparkSession, String tableName, List<String> partitionNames) {
-        HiveTable.builder().sparkSession(sparkSession).tableName(tableName).partitionNames(partitionNames);
+        this(HiveTable.builder()
+                .sparkSession(sparkSession)
+                .tableName(tableName)
+                .partitionNames(partitionNames)
+                .build());
     }
 
     /**

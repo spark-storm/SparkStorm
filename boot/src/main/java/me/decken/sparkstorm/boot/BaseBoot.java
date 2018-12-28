@@ -7,11 +7,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.serializer.JavaSerializer;
 import org.apache.spark.serializer.KryoRegistrator;
+import org.apache.spark.serializer.KryoSerializer;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.hive.HiveUtils;
 import org.apache.spark.sql.internal.SQLConf;
 
 import java.util.List;
@@ -35,8 +38,17 @@ public abstract class BaseBoot {
 
     public BaseBoot() {
         SparkSessionBuilder builder = new SparkSessionBuilder(SparkSession.builder());
+        // 默认开启的选项, 最后以option里面的选项为准
+        defaultBuiler(builder);
         option(builder);
         this.session = builder.sessionBuilder.getOrCreate();
+    }
+
+    private SparkSessionBuilder defaultBuiler(SparkSessionBuilder builder) {
+        builder.defaultSqlConfig();
+        builder.kryoSerializer();   // 默认使用kryo
+        builder.orcHive();
+        return builder;
     }
 
     /**
@@ -142,7 +154,9 @@ public abstract class BaseBoot {
      */
     public static class SparkSessionBuilder {
 
-        public static final String DEFAUL_FS = "fs.defaultFS";
+        public static final String DEFAULT_FS = "fs.defaultFS";
+
+        public static final String SERIALIZER = "spark.serializer";
 
         protected SparkSession.Builder sessionBuilder;
 
@@ -179,10 +193,34 @@ public abstract class BaseBoot {
             return this;
         }
 
+
         public SparkSessionBuilder kryoRegistrator(KryoRegistrator kryoRegistrator) {
             if (kryoRegistrator != null) {
                 kryoRegistrator(Lists.newArrayList(kryoRegistrator));
             }
+            return this;
+        }
+
+        public SparkSessionBuilder kryoSerializer() {
+            sessionBuilder.config(SERIALIZER, KryoSerializer.class.getName());
+            sessionBuilder.config("spark.kryoserializer.buffer.max", "256M");
+            sessionBuilder.config("spark.kryo.unsafe", true);
+            return this;
+        }
+
+        /**
+         * 开启kryoSerializer的情况下, 如果需要序列化的类没有在kryoRegistrator注册, 则序列化的时候会在每个对象的加上全类名, 会严重影响性能.
+         * 开启这个选项在遇到没有注册的类的时候会抛出异常, 是否开启就要你在性能和编码灵活性上取舍了.
+         *
+         * @return
+         */
+        public SparkSessionBuilder KryoRegistrationRequired() {
+            sessionBuilder.config("spark.kryo.registrationRequired", true);
+            return this;
+        }
+
+        public SparkSessionBuilder javaSerializer() {
+            sessionBuilder.config(SERIALIZER, JavaSerializer.class.getName());
             return this;
         }
 
@@ -191,6 +229,22 @@ public abstract class BaseBoot {
                     //动态分区特性
                     .config("hive.exec.dynamic.partition", "true")
                     .config("hive.exec.dynamic.partition.mode", "nonstrict");
+            return this;
+        }
+
+        public SparkSessionBuilder orcHive() {
+            sessionBuilder.config(HiveUtils.CONVERT_METASTORE_ORC().key(), true);
+            sessionBuilder.config(SQLConf.HIVE_CASE_SENSITIVE_INFERENCE().key(), "NEVER_INFER");
+            sessionBuilder.config(SQLConf.ORC_FILTER_PUSHDOWN_ENABLED().key(), true);
+//            sessionBuilder.config(SQLConf.ORC_COMPRESSION().key(), "snappy");
+            return this;
+        }
+
+        public SparkSessionBuilder disableOrcHive() {
+
+            sessionBuilder.config(HiveUtils.CONVERT_METASTORE_ORC().key(), Boolean.valueOf(HiveUtils.CONVERT_METASTORE_ORC().defaultValueString()));
+            sessionBuilder.config(SQLConf.HIVE_CASE_SENSITIVE_INFERENCE().key(), SQLConf.HIVE_CASE_SENSITIVE_INFERENCE().defaultValueString());
+            sessionBuilder.config(SQLConf.ORC_FILTER_PUSHDOWN_ENABLED().key(), Boolean.valueOf(SQLConf.ORC_FILTER_PUSHDOWN_ENABLED().defaultValueString()));
             return this;
         }
 
@@ -217,7 +271,7 @@ public abstract class BaseBoot {
         }
 
         public SparkSessionBuilder defaultFS(String defaultFS) {
-            this.sessionBuilder.config(DEFAUL_FS, defaultFS);
+            this.sessionBuilder.config(DEFAULT_FS, defaultFS);
             return this;
         }
 
@@ -227,7 +281,7 @@ public abstract class BaseBoot {
          * @return
          */
         public SparkSessionBuilder localFS() {
-            this.sessionBuilder.config(DEFAUL_FS, "file:///");
+            this.sessionBuilder.config(DEFAULT_FS, "file:///");
             return this;
         }
 

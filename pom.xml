@@ -36,6 +36,7 @@
         <module>common</module>
         <module>udf</module>
         <module>scala-udf</module>
+        <module>app</module>
     </modules>
 
     <properties>
@@ -119,6 +120,7 @@
             <plugin>        <!--for source code-->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -132,6 +134,7 @@
             <plugin>    <!--for javadoc-->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <phase>deploy</phase>

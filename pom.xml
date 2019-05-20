@@ -198,10 +198,10 @@
     <profiles>
         <!-- 线上环境 -->
         <profile>
-            <id>release</id>
+            <id>prod</id>
             <build>
                 <filters>
-                    <filter>../release.properties</filter>
+                    <filter>../prod.properties</filter>
                 </filters>
             </build>
         </profile>

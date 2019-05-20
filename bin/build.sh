@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-mvn clean -U package -Dmaven.test.skip=true -Prelease
+mvn clean -U package -Dmaven.test.skip=true -Pprod

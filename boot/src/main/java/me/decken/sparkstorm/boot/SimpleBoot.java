@@ -7,6 +7,7 @@ public class SimpleBoot extends BaseBoot {
     private String appName;
 
     public SimpleBoot(String appName) {
+        super();
         this.appName = appName;
     }
 

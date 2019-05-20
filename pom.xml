@@ -205,12 +205,23 @@
                 </filters>
             </build>
         </profile>
-
+        <!--单元测试环境-->
+        <profile>
+            <id>unittest</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <filters>
+                    <filter>../unittest.properties</filter>
+                </filters>
+            </build>
+        </profile>
         <!-- 本地测试环境 -->
         <profile>
             <id>dev</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <build>
                 <filters>

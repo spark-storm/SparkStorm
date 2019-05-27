@@ -3,11 +3,12 @@ package me.decken.sparkstorm.boot;
 /**
  * @author decken
  */
-public class SimpleBootWithHive extends BaseBoot {
+public class SimpleLocalBootWithHive extends BaseBoot {
     private String appName;
 
-    public SimpleBootWithHive(String appName) {
+    public SimpleLocalBootWithHive(String appName) {
         this.appName = appName;
+        init();
     }
 
     @Override public void option(SparkSessionBuilder builder) {

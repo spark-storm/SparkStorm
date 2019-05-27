@@ -36,7 +36,16 @@ public abstract class BaseBoot {
     @Getter
     private SparkSession session;
 
+
     public BaseBoot() {
+
+
+    }
+
+    /**
+     * 用于初始化客户端
+     */
+    public void init() {
         SparkSessionBuilder builder = new SparkSessionBuilder(SparkSession.builder());
         // 默认开启的选项, 最后以option里面的选项为准
         defaultBuiler(builder);

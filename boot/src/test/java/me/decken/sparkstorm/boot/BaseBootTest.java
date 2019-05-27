@@ -21,6 +21,7 @@ public class BaseBootTest {
                 builder.appName(APP_NAME).localMaster().localFS();
             }
         };
+        boot.init();
         String fs = boot.getConfig(BaseBoot.SparkSessionBuilder.DEFAULT_FS);
         assertNotNull(fs);
         System.out.println("fs:" + fs);
@@ -36,6 +37,7 @@ public class BaseBootTest {
                 builder.appName(APP_NAME).localMaster().defaultFS("hdfs://notExistCluster");
             }
         };
+        boot.init();
         Dataset<Row> data = boot.spark().read().load("abc");
         data.count();
     }

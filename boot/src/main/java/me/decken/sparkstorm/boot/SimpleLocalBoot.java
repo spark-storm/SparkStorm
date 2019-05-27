@@ -3,12 +3,13 @@ package me.decken.sparkstorm.boot;
 /**
  * @author decken
  */
-public class SimpleBoot extends BaseBoot {
+public class SimpleLocalBoot extends BaseBoot {
     private String appName;
 
-    public SimpleBoot(String appName) {
+    public SimpleLocalBoot(String appName) {
         super();
         this.appName = appName;
+        init();
     }
 
     @Override public void option(SparkSessionBuilder builder) {
